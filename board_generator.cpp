@@ -8,7 +8,8 @@
 
 using namespace std;
 
-bool can_block_cell(Board* b, int idx);
+bool can_close_cell(Board* b, int idx);
+bool can_close_cell_symmetric(Board* b, int idx);
 bool is_in_corner(Board* b, int idx);
 bool surrounds_cell(Board* b, int idx);
 bool violates_min_length(Board* b, int idx);
@@ -16,15 +17,7 @@ int walk_idx(Board*b, int idx);
 
 // Takes an empty board and generates in closed squares
 void generate_blocking_tiles(Board* b) {
-
-    // b->data[0] = CLOSED_TILE;
-    // b->data[4] = CLOSED_TILE;
-    // b->data[20] = CLOSED_TILE;
-    // b->data[24] = CLOSED_TILE;
-
-    // return;
-
-    int i, j, idx, cell, iterations;
+    int i, j, idx, sym_idx, cell, iterations;
     
     // vector of indices of open spots
     // TODO: should this be a pointer?
@@ -38,9 +31,16 @@ void generate_blocking_tiles(Board* b) {
         idx = rand() % open_cells->size();
         cell = open_cells->at(idx);
 
-        if(can_block_cell(b, cell)) {
+        // if(can_close_cell(b, cell)) {
+        //     b->data[cell] = CLOSED_TILE;
+        //     open_cells->erase(open_cells->begin()+idx);
+        // }
+        if(can_close_cell_symmetric(b, cell)) {
+            sym_idx = b->size*b->size - 1 - cell;
             b->data[cell] = CLOSED_TILE;
+            b->data[sym_idx] = CLOSED_TILE;
             open_cells->erase(open_cells->begin()+idx);
+            // open_cells->erase(open_cells->begin()+sym_idx);
         }
         
         if(open_cells->size() / (b->size * b->size * 1.0) < 1 - CLOSED_TILE_RATIO)
@@ -52,7 +52,22 @@ void generate_blocking_tiles(Board* b) {
     }
 }
 
-bool can_block_cell(Board* b, int idx) {
+bool can_close_cell_symmetric(Board* b, int idx) {
+    int sym_idx = b->size*b->size - 1 - idx;
+    bool success = true;
+
+    b->data[sym_idx] = CLOSED_TILE;
+    success &= can_close_cell(b, idx);
+    b->data[sym_idx] = OPEN_TILE;
+
+    b->data[idx] = CLOSED_TILE;
+    success &= can_close_cell(b, sym_idx);
+    b->data[idx] = OPEN_TILE;
+
+    return success;
+}
+
+bool can_close_cell(Board* b, int idx) {
     if(surrounds_cell(b, idx))
         return false;
     if(b->size > 7 && is_in_corner(b, idx))

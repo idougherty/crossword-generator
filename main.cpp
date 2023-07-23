@@ -7,7 +7,7 @@
 #include "defs.h"
 
 int main(int argc, char** args) {
-    int size = 5;
+    int size = 15;
     string solution_file;
     SolutionDictionary dict;
     struct Board* b;
