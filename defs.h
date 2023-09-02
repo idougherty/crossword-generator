@@ -14,4 +14,4 @@
 #define CLOSED_TILE_RATIO 1 / 6.0
 
 // solver.cpp
-#define LOOKAHEAD 10
+#define LOOKAHEAD 20

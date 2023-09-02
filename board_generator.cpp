@@ -20,7 +20,6 @@ void generate_blocking_tiles(Board* b) {
     int i, j, idx, sym_idx, cell, iterations;
     
     // vector of indices of open spots
-    // TODO: should this be a pointer?
     auto *open_cells = new vector<int>();
 
     for(i = 0; i < b->size; i++)
@@ -28,7 +27,7 @@ void generate_blocking_tiles(Board* b) {
             open_cells->push_back((GETIDX(b, i, j)));
 
     while (!open_cells->empty()) {
-        idx = rand() % open_cells->size();
+        idx = rand() % open_cells->size() / 2;
         cell = open_cells->at(idx);
 
         // if(can_close_cell(b, cell)) {
@@ -40,7 +39,6 @@ void generate_blocking_tiles(Board* b) {
             b->data[cell] = CLOSED_TILE;
             b->data[sym_idx] = CLOSED_TILE;
             open_cells->erase(open_cells->begin()+idx);
-            // open_cells->erase(open_cells->begin()+sym_idx);
         }
         
         if(open_cells->size() / (b->size * b->size * 1.0) < 1 - CLOSED_TILE_RATIO)

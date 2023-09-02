@@ -54,10 +54,7 @@ int get_length(struct Board* b, int row, int col, bool is_across, int dir) {
 
     while(col >= 0 && row >= 0 && col < b->size && row < b->size && GETVAL(b, row, col) != CLOSED_TILE) {
         length++;
-        if(is_across)
-            col += dir;
-        else
-            row += dir;
+        is_across ? col += dir : row += dir;
     }
 
     return length;

@@ -1,4 +1,5 @@
 #include "variable.hpp"
+#include "solution_dictionary.hpp"
 #include <cstdio>
 
 Variable::Variable() {}
@@ -13,8 +14,8 @@ Variable::Variable(int row, int col, int length, bool is_across) {
 }
 
 bool Variable::prune_values(char c, int idx) {
-    list<string> pruned_batch = list<string>();
-    list<string>::iterator iter;
+    list<Solution> pruned_batch = list<Solution>();
+    list<Solution>::iterator iter;
 
     if(is_filled)
         return false;
@@ -23,7 +24,7 @@ bool Variable::prune_values(char c, int idx) {
 
     iter = possible_values.begin();
     while (iter != possible_values.end()) {
-        string val = *iter;
+        string val = (*iter).word;
 
         if (val.at(idx) == c) {
             ++iter;
@@ -45,24 +46,6 @@ void Variable::unprune_values(char c, int idx) {
 
     possible_values.splice(possible_values.end(), pruned_values.top());
     pruned_values.pop();
-
-    // list<string>::iterator iter;
-
-    // // re-add all matches, can be more efficient
-    // iter = pruned_values.begin();
-    // while (iter != pruned_values.end()) {
-    //     bool match = true;
-    //     string word = *iter;
-    //     for(int i = 0; i < length; i++) {
-    //         if(value[i] != OPEN_TILE && value[i] != (*iter)[i]) {
-    //             match = false;
-    //             break;
-    //         }
-    //     }
-    //     if(!match) break;
-    //     possible_values.push_front(*iter);
-    //     iter = pruned_values.erase(iter);
-    // }
 }
 
 void Variable::print() {

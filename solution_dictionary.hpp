@@ -6,10 +6,15 @@
 
 using namespace std;
 
+struct Solution {
+    string word;
+    string clue;
+};
+
 class SolutionDictionary {
     private:
-        unordered_map<int, list<string>> word_list;
+        unordered_map<int, list<Solution>> word_list;
     public:
-        static SolutionDictionary from_csv(string file_path);
-        list<string> get_words_by_length(int length);
+        static SolutionDictionary from_csv(string file_path, int word_col, int clue_col);
+        list<Solution> get_solutions_by_length(int length);
 };

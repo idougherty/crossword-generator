@@ -28,14 +28,14 @@ vector<Variable*> create_variables(struct Board* b, SolutionDictionary dict) {
             if(row == 0 || GETVAL(b, row - 1, col) == CLOSED_TILE) {
                 length = get_length(b, row, col, false, 1);
                 var = new Variable(row, col, length, false);
-                var->possible_values = list<string>(dict.get_words_by_length(length));
+                var->possible_values = dict.get_solutions_by_length(length);
                 var->constraints = vector<pair<Variable*, int>>(length);
                 vars.push_back(var);
             }
             if(col == 0 || GETVAL(b, row, col - 1) == CLOSED_TILE) {
                 length = get_length(b, row, col, true, 1);
                 var = new Variable(row, col, length, true);
-                var->possible_values = list<string>(dict.get_words_by_length(length));
+                var->possible_values = dict.get_solutions_by_length(length);
                 var->constraints = vector<pair<Variable*, int>>(length);
                 vars.push_back(var);
             }
@@ -89,9 +89,9 @@ Variable* choose_variable(vector<Variable*> vars) {
     return best;
 }
 
-string choose_value(Variable* var) {
+Solution choose_value(Variable* var) {
     int i, j, score, best_score;
-    list<string>::iterator iter, best;
+    list<Solution>::iterator iter, best;
 
     iter = var->possible_values.begin();
     best = iter;
@@ -107,9 +107,9 @@ string choose_value(Variable* var) {
             if(cross->is_filled)
                 continue;
 
-            cross->prune_values((*iter).at(j), pos);
+            cross->prune_values((*iter).word.at(j), pos);
             score *= cross->possible_values.size();
-            cross->unprune_values((*iter).at(j), pos);
+            cross->unprune_values((*iter).word.at(j), pos);
         }
 
         if(score > best_score) {
@@ -125,20 +125,17 @@ string choose_value(Variable* var) {
 
 int attempts = 0;
 
-// TODO: store pruned values in batches, so unpruning can happen in constant time
-
 bool recursive_solve(vector<Variable*> vars, Board* b) {
     int i;
     bool backtrack;
-    string chosen_val, prev_value;
-    list<string> tmp_pruned, attempted_values = list<string>();
+    Solution chosen_val;
+    string prev_value;
+    list<Solution> attempted_values = list<Solution>();
     Variable* var;
-
-    // printf("one level deeper\n");
 
     var = choose_variable(vars);
 
-    // puzzle solved!
+    // no variables left to solve for, solution found!
     if(var == NULL)
         return true;
 
@@ -156,27 +153,19 @@ bool recursive_solve(vector<Variable*> vars, Board* b) {
 
         // we know we have collapsed this variable to a single value
         prev_value = var->value;
-        var->value = chosen_val;
+        var->value = chosen_val.word;
+        var->solution = chosen_val;
         var->is_filled = true;
         var->pruned_values.push(var->possible_values);
-        var->possible_values = list<string>{};
+        var->possible_values = list<Solution>{};
 
-        // printf("trying to place word '%s'\n", chosen_val.c_str());
         for(i = 0; i < var->value.length(); i++) {
             auto [cross, pos] = var->constraints[i];
-            if(cross->prune_values(chosen_val[i], pos)) {
+            if(cross->prune_values(chosen_val.word[i], pos)) {
                 backtrack = true;
                 break;
             }
         }
-
-        // if(!backtrack) {
-        //     printf("placing word '%s'\n", chosen_val.c_str());
-        //     fill_board(vars, b);
-        //     print_board(b);
-        //     fill_board(vars, b, false);
-        //     print_board(b);
-        // }
 
         if(!backtrack && recursive_solve(vars, b))
             return true;
@@ -188,14 +177,8 @@ bool recursive_solve(vector<Variable*> vars, Board* b) {
         for(i = (i >= var->length) ? var->length-1 : i; i >= 0; i--) {
             auto [cross, pos] = var->constraints[i];
             cross->value[pos] = prev_value[i];
-            cross->unprune_values(chosen_val[i], pos);
+            cross->unprune_values(chosen_val.word[i], pos);
         }
-
-        // printf("backtracking word '%s', previously '%s'\n", chosen_val.c_str(), prev_value.c_str());
-        // fill_board(vars, b);
-        // print_board(b);
-        // fill_board(vars, b, false);
-        // print_board(b);
     }
 
     var->possible_values.splice(var->possible_values.end(), attempted_values);
@@ -211,6 +194,11 @@ void solve_board(struct Board* b, SolutionDictionary dict) {
         printf("SOLUTION:\n");
         fill_board(vars, b);
         print_board(b);
+
+        printf("CLUES:\n");
+        for(auto var : vars) {
+            printf("%s: %s\n", var->solution.word.data(), var->solution.clue.data());
+        }
     } else {
         printf("Couldn't solve board. :(");
     }

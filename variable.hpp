@@ -3,15 +3,17 @@
 #include <string>
 #include <vector>
 #include "defs.h"
+#include "solution_dictionary.hpp"
 
 using namespace std;
 
 class Variable {
     public:
-        list<string> possible_values;
-        stack<list<string>> pruned_values;
+        list<Solution> possible_values;
+        stack<list<Solution>> pruned_values;
         vector<pair<Variable*, int>> constraints;    // int is the index of the other variable that overlaps
         string value;
+        Solution solution;
         int row;
         int col;
         int length;

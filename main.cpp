@@ -7,7 +7,7 @@
 #include "defs.h"
 
 int main(int argc, char** args) {
-    int size = 15;
+    int size = 7;
     string solution_file;
     SolutionDictionary dict;
     struct Board* b;
@@ -17,7 +17,7 @@ int main(int argc, char** args) {
         return -1;
     }
 
-    dict = SolutionDictionary::from_csv(args[1]);
+    dict = SolutionDictionary::from_csv(args[1], 1, 2);
 
     printf("Generating a board of size %d...\n", size);
     b = create_board(size);
@@ -34,3 +34,15 @@ int main(int argc, char** args) {
 
     return 0;
 }
+
+/*
+TODO:
+- add solution clues
+- do not reuse words in the same puzzle
+- figure out how solution dictionary reordering will work
+- package up the following functionalities as stateless wasm modules
+    - generate crossword & solution given a some grid size
+        - should retry until valid answer is found in a reasonable amount of time
+    - generate solution given a crossword grid
+        - should have failure states
+*/
