@@ -14,8 +14,8 @@ Variable::Variable(int row, int col, int length, bool is_across) {
 }
 
 bool Variable::prune_values(char c, int idx) {
-    list<Solution> pruned_batch = list<Solution>();
-    list<Solution>::iterator iter;
+    list<Solution*> pruned_batch = list<Solution*>();
+    list<Solution*>::iterator iter;
 
     if(is_filled)
         return false;
@@ -24,7 +24,7 @@ bool Variable::prune_values(char c, int idx) {
 
     iter = possible_values.begin();
     while (iter != possible_values.end()) {
-        string val = (*iter).word;
+        string val = (*iter)->word;
 
         if (val.at(idx) == c) {
             ++iter;
@@ -39,7 +39,6 @@ bool Variable::prune_values(char c, int idx) {
     return possible_values.size() == 0;
 }
 
-// should re-add some range to start of possible vals
 void Variable::unprune_values(char c, int idx) {
     if(is_filled)
         return;

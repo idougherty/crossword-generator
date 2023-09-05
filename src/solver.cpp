@@ -28,14 +28,14 @@ vector<Variable*> create_variables(struct Board* b, SolutionDictionary dict) {
             if(row == 0 || GETVAL(b, row - 1, col) == CLOSED_TILE) {
                 length = get_length(b, row, col, false, 1);
                 var = new Variable(row, col, length, false);
-                var->possible_values = dict.get_solutions_by_length(length);
+                var->possible_values = list<Solution*>( dict.get_solutions_by_length(length) );
                 var->constraints = vector<pair<Variable*, int>>(length);
                 vars.push_back(var);
             }
             if(col == 0 || GETVAL(b, row, col - 1) == CLOSED_TILE) {
                 length = get_length(b, row, col, true, 1);
                 var = new Variable(row, col, length, true);
-                var->possible_values = dict.get_solutions_by_length(length);
+                var->possible_values = list<Solution*>( dict.get_solutions_by_length(length) );
                 var->constraints = vector<pair<Variable*, int>>(length);
                 vars.push_back(var);
             }
@@ -47,6 +47,7 @@ vector<Variable*> create_variables(struct Board* b, SolutionDictionary dict) {
         for(col = 0; col < b->size; col++) {
             if(GETVAL(b, row, col) == CLOSED_TILE) 
                 continue;
+            
             across = get_variable(vars, b, row, col, true);
             down = get_variable(vars, b, row, col, false);
 
@@ -89,9 +90,9 @@ Variable* choose_variable(vector<Variable*> vars) {
     return best;
 }
 
-Solution choose_value(Variable* var) {
-    int i, j, score, best_score;
-    list<Solution>::iterator iter, best;
+Solution* choose_value(Variable* var) {
+    int i, score, best_score;
+    list<Solution*>::iterator iter, best;
 
     iter = var->possible_values.begin();
     best = iter;
@@ -102,14 +103,14 @@ Solution choose_value(Variable* var) {
         
         score = 1;
 
-        for(j = 0; j < var->length; j++) {
+        for(i = 0; i < var->length; i++) {
             auto [cross, pos] = var->constraints[i];
             if(cross->is_filled)
                 continue;
 
-            cross->prune_values((*iter).word.at(j), pos);
+            cross->prune_values((*iter)->word.at(i), pos);
             score *= cross->possible_values.size();
-            cross->unprune_values((*iter).word.at(j), pos);
+            cross->unprune_values((*iter)->word.at(i), pos);
         }
 
         if(score > best_score) {
@@ -128,9 +129,9 @@ int attempts = 0;
 bool recursive_solve(vector<Variable*> vars, Board* b) {
     int i;
     bool backtrack;
-    Solution chosen_val;
+    Solution* chosen_val;
     string prev_value;
-    list<Solution> attempted_values = list<Solution>();
+    list<Solution*> attempted_values = list<Solution*>();
     Variable* var;
 
     var = choose_variable(vars);
@@ -153,15 +154,16 @@ bool recursive_solve(vector<Variable*> vars, Board* b) {
 
         // we know we have collapsed this variable to a single value
         prev_value = var->value;
-        var->value = chosen_val.word;
+        var->value = chosen_val->word;
         var->solution = chosen_val;
+        // printf("hint: %s\n", chosen_val.clue.data());
         var->is_filled = true;
         var->pruned_values.push(var->possible_values);
-        var->possible_values = list<Solution>{};
+        var->possible_values = list<Solution*>{};
 
         for(i = 0; i < var->value.length(); i++) {
             auto [cross, pos] = var->constraints[i];
-            if(cross->prune_values(chosen_val.word[i], pos)) {
+            if(cross->prune_values(chosen_val->word[i], pos)) {
                 backtrack = true;
                 break;
             }
@@ -177,7 +179,7 @@ bool recursive_solve(vector<Variable*> vars, Board* b) {
         for(i = (i >= var->length) ? var->length-1 : i; i >= 0; i--) {
             auto [cross, pos] = var->constraints[i];
             cross->value[pos] = prev_value[i];
-            cross->unprune_values(chosen_val.word[i], pos);
+            cross->unprune_values(chosen_val->word[i], pos);
         }
     }
 
@@ -187,7 +189,7 @@ bool recursive_solve(vector<Variable*> vars, Board* b) {
 
 void solve_board(struct Board* b, SolutionDictionary dict) {
     vector<Variable*> vars = create_variables(b, dict);
-
+    
     bool success = recursive_solve(vars, b);
     
     if(success) {
@@ -197,7 +199,7 @@ void solve_board(struct Board* b, SolutionDictionary dict) {
 
         printf("CLUES:\n");
         for(auto var : vars) {
-            printf("%s: %s\n", var->solution.word.data(), var->solution.clue.data());
+            printf("%s: %s\n", var->solution->word.data(), var->solution->clue.data());
         }
     } else {
         printf("Couldn't solve board. :(");

@@ -70,7 +70,7 @@ SolutionDictionary SolutionDictionary::from_csv(string file_path, int word_col, 
     auto file =  ifstream(file_path);
     string line;
     vector<string> split_line;
-    Solution solution;
+    Solution* solution;
     int len;
 
     if(!file.good())
@@ -86,14 +86,15 @@ SolutionDictionary SolutionDictionary::from_csv(string file_path, int word_col, 
             continue;
         }
 
-        solution = Solution();
-        solution.word = split_line[word_col];
-        solution.clue = split_line[clue_col];
-        len = solution.word.length();
-        // printf("%s, %s\n", solution.word.data(), solution.clue.data());
+        solution = new Solution {
+            split_line[word_col],
+            split_line[clue_col]
+        };
+        
+        len = solution->word.length();
 
         if(dict.word_list.find(len) == dict.word_list.end()) {
-            dict.word_list.insert({len, list<Solution> { solution }});
+            dict.word_list.insert({len, list<Solution*> { solution }});
         } else {
             dict.word_list.at(len).push_back(solution);
         }
@@ -104,39 +105,8 @@ SolutionDictionary SolutionDictionary::from_csv(string file_path, int word_col, 
     return dict;
 }
 
-list<Solution> SolutionDictionary::get_solutions_by_length(int length) {
+list<Solution*> SolutionDictionary::get_solutions_by_length(int length) {
     if(word_list.find(length) == word_list.end())
-        return list<Solution>();
+        return list<Solution*>();
     return word_list.at(length);
 }
-
-
-    // while (getline(stream, column, ',')) {
-    //     if (hasQuote)
-    //         part += ',';
-
-    //     start = 0;
-    //     if (!hasQuote && column.front() == single_quote) {
-    //         hasQuote = true;
-    //         start = 1;
-    //         part = "";
-    //     }
-        
-    //     if (hasQuote) {
-    //         while ((end = column.find(escaped_quote, start)) != string::npos) {
-    //             part += column.substr(start, end - start) + single_quote;
-    //             start = end + escaped_quote.length();
-    //         }
-    //     } else {
-    //         values.push_back(column);
-    //         continue;
-    //     }
-
-    //     if (hasQuote && column.back() == single_quote) {
-    //         hasQuote = false;
-    //         part += column.substr(start, (column.length() - start) - 1);
-    //         values.push_back(part);
-    //     } else {
-    //         part += column.substr(start);
-    //     }
-    // }

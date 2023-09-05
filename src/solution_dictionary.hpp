@@ -13,8 +13,8 @@ struct Solution {
 
 class SolutionDictionary {
     private:
-        unordered_map<int, list<Solution>> word_list;
+        unordered_map<int, list<Solution*>> word_list;
     public:
         static SolutionDictionary from_csv(string file_path, int word_col, int clue_col);
-        list<Solution> get_solutions_by_length(int length);
+        list<Solution*> get_solutions_by_length(int length);
 };
