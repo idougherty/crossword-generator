@@ -17,7 +17,7 @@ int walk_idx(Board*b, int idx);
 
 // Takes an empty board and generates in closed squares
 void generate_blocking_tiles(Board* b) {
-    int i, j, idx, sym_idx, cell, iterations;
+    int i, j, idx, sym_idx, cell, iterations = 0;
     
     // vector of indices of open spots
     auto *open_cells = new vector<int>();
@@ -30,10 +30,6 @@ void generate_blocking_tiles(Board* b) {
         idx = rand() % open_cells->size() / 2;
         cell = open_cells->at(idx);
 
-        // if(can_close_cell(b, cell)) {
-        //     b->data[cell] = CLOSED_TILE;
-        //     open_cells->erase(open_cells->begin()+idx);
-        // }
         if(can_close_cell_symmetric(b, cell)) {
             sym_idx = b->size*b->size - 1 - cell;
             b->data[cell] = CLOSED_TILE;
@@ -48,6 +44,8 @@ void generate_blocking_tiles(Board* b) {
         if(iterations > 1000)
             break;
     }
+
+    delete open_cells;
 }
 
 bool can_close_cell_symmetric(Board* b, int idx) {

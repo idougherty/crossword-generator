@@ -11,7 +11,7 @@ LD = g++
 # C flags
 CFLAGS = 
 # C++ flags
-CXXFLAGS = 
+CXXFLAGS = -O3
 # C/C++ flags
 CPPFLAGS = -Wall
 # dependency-generation flags
@@ -26,13 +26,15 @@ BIN = bin
 OBJ = obj
 SRC = src
 
-SOURCES := $(wildcard $(SRC)/*.c $(SRC)/*.cc $(SRC)/*.cpp $(SRC)/*.cxx)
+# SOURCES := $(wildcard $(SRC)/*.cpp)
+SOURCES :=  $(SRC)/main.cpp \
+			$(SRC)/board_generator.cpp \
+			$(SRC)/board.cpp \
+			$(SRC)/clue_dictionary.cpp \
+			$(SRC)/solver.cpp \
+			$(SRC)/variable.cpp
 
-OBJECTS := \
-	$(patsubst $(SRC)/%.c, $(OBJ)/%.o, $(wildcard $(SRC)/*.c)) \
-	$(patsubst $(SRC)/%.cc, $(OBJ)/%.o, $(wildcard $(SRC)/*.cc)) \
-	$(patsubst $(SRC)/%.cpp, $(OBJ)/%.o, $(wildcard $(SRC)/*.cpp)) \
-	$(patsubst $(SRC)/%.cxx, $(OBJ)/%.o, $(wildcard $(SRC)/*.cxx))
+OBJECTS := $(patsubst $(SRC)/%.cpp, $(OBJ)/%.o, $(SOURCES))
 
 # include compiler-generated dependency rules
 DEPENDS := $(OBJECTS:.o=.d)
@@ -72,6 +74,12 @@ $(OBJ)/%.o:	$(SRC)/%.cpp
 
 $(OBJ)/%.o:	$(SRC)/%.cxx
 	$(COMPILE.cxx) $<
+
+# wasm target
+wasm:
+	em++ $(SRC)/wasm_api.cpp $(SRC)/board.cpp $(SRC)/board_generator.cpp $(SRC)/solver.cpp $(SRC)/clue_dictionary.cpp $(SRC)/variable.cpp \
+		-o $(BIN)/wasm/$(EXE).js -s NO_EXIT_RUNTIME=1 -s "EXPORTED_RUNTIME_METHODS=['ccall']" --preload-file data/unique-nyt-clues.csv -sALLOW_MEMORY_GROWTH \
+		-lembind -O3
 
 # force rebuild
 .PHONY: remake

@@ -1,9 +1,11 @@
-#include "solution_dictionary.hpp"
+#include "clue_dictionary.hpp"
 #include <cstddef>
 #include <exception>
 #include <fstream>
 #include <sstream>
 #include <vector>
+#include <algorithm>
+#include <random>
 
 vector<string> split(string s, char delimiter) {
     size_t pos_start = 0, pos_end;
@@ -29,7 +31,7 @@ vector<string> split_row(string line, char delimiter) {
     vector<string> values;
     bool hasQuote = false;
     string part = "";
-    int start, end;
+    string::size_type start, end;
 
     // TODO: make this not so ugly
     while (getline(stream, column, ',')) {
@@ -65,38 +67,42 @@ vector<string> split_row(string line, char delimiter) {
     return values;
 }
 
-SolutionDictionary SolutionDictionary::from_csv(string file_path, int word_col, int clue_col) {
-    auto dict = SolutionDictionary();
+ClueDictionary ClueDictionary::from_csv(string file_path, int solution_col, int hint_col) {
+    auto dict = ClueDictionary();
     auto file =  ifstream(file_path);
     string line;
     vector<string> split_line;
-    Solution* solution;
+    Clue* clue;
     int len;
 
     if(!file.good())
-        throw new exception();
+        throw exception();
 
     getline (file, line);
     
     while (getline (file, line)) {
         split_line = split_row(line, ',');
 
-        if(split_line.size() < word_col || split_line.size() < clue_col) {
+        if(split_line.size() < solution_col || split_line.size() < hint_col) {
             printf("Could not parse line: %s\n\n", line.data());
             continue;
         }
 
-        solution = new Solution {
-            split_line[word_col],
-            split_line[clue_col]
+        clue = new Clue {
+            false,
+            split_line[solution_col],
+            split_line[hint_col]
         };
         
-        len = solution->word.length();
+        len = clue->solution.length();
 
-        if(dict.word_list.find(len) == dict.word_list.end()) {
-            dict.word_list.insert({len, list<Solution*> { solution }});
+        if(len == 0)
+            continue;
+
+        if(dict.clue_map.find(len) == dict.clue_map.end()) {
+            dict.clue_map.insert({len, list<Clue*> { clue }});
         } else {
-            dict.word_list.at(len).push_back(solution);
+            dict.clue_map.at(len).push_back(clue);
         }
     }
 
@@ -105,8 +111,18 @@ SolutionDictionary SolutionDictionary::from_csv(string file_path, int word_col, 
     return dict;
 }
 
-list<Solution*> SolutionDictionary::get_solutions_by_length(int length) {
-    if(word_list.find(length) == word_list.end())
-        return list<Solution*>();
-    return word_list.at(length);
+void ClueDictionary::shuffle_clues(int seed) {
+    vector<Clue*> tmp;
+
+    for(auto entry : clue_map) {
+        tmp = vector<Clue*>(entry.second.begin(), entry.second.end());
+        shuffle(tmp.begin(), tmp.end(), default_random_engine(seed));
+        copy(tmp.begin(), tmp.end(), clue_map.find(entry.first)->second.begin());
+    }
+}
+
+list<Clue*> ClueDictionary::get_clues_by_length(int length) {
+    if(clue_map.find(length) == clue_map.end())
+        return list<Clue*>();
+    return clue_map.at(length);
 }

@@ -21,7 +21,8 @@ Board* create_board(int size) {
 }
 
 void free_board(struct Board* b) {
-    free(b);
+    delete[] b->data;
+    delete b;
 }
 
 void print_board(struct Board* b) {
@@ -47,6 +48,40 @@ void print_board(struct Board* b) {
     for(i = 0; i < b->size; i++)
         printf("━━");
     printf("┛\n");
+}
+
+void fill_board(vector<Solution> solutions, struct Board* b, bool is_across) {
+    int row, col;
+    for(auto solution : solutions) {
+        if(solution.is_across != is_across)
+            continue;
+        row = solution.row;
+        col = solution.col;
+        for(char c : solution.value) {
+            b->data[row * b->size + col] = c;
+            if(is_across)
+                col++;
+            else
+                row++;
+        }
+    }
+}
+
+void fill_board(vector<Variable*> solutions, struct Board* b, bool is_across) {
+    int row, col;
+    for(auto solution : solutions) {
+        if(solution->is_across != is_across)
+            continue;
+        row = solution->row;
+        col = solution->col;
+        for(char c : solution->domain) {
+            b->data[row * b->size + col] = c;
+            if(is_across)
+                col++;
+            else
+                row++;
+        }
+    }
 }
 
 int get_length(struct Board* b, int row, int col, bool is_across, int dir) {
